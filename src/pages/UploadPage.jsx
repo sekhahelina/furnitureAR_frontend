@@ -79,7 +79,7 @@ export default function UploadPage() {
           toast.error(err.message || 'Сталася помилка під час аналізу')
           setScanning(false)
         }
-      }, 3000)
+      }, 10000)
 
     } catch (err) {
       toast.error(err.response?.data?.detail || 'Помилка аналізу. Спробуйте ще раз.')

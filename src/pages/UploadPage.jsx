@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import toast from 'react-hot-toast'
 import DropZone from '../components/upload/DropZone'
 import ScanAnimation from '../components/upload/ScanAnimation'
-import { analyzeRoom } from '../api/analyzeApi'
+import { analyzeRoom, getStatus } from '../api/analyzeApi' // Додали getStatus
 import { useAnalysisStore } from '../store/analysisStore'
 
 export default function UploadPage() {
@@ -26,20 +26,61 @@ export default function UploadPage() {
     setStep(0)
 
     try {
-      // Simulate step progress while waiting for API
-      const stepTimer = setInterval(() => {
-        setStep((s) => Math.min(s + 1, 3))
-      }, 1800)
+      // 1. Отримуємо scan_id від бекенду
+      const { scan_id } = await analyzeRoom(file)
 
-      const result = await analyzeRoom(file)
-      clearInterval(stepTimer)
-      setStep(3)
+      // 2. Функція для перевірки статусу
+      const checkStatus = async () => {
+        const res = await getStatus(scan_id)
+        console.log("Отримано статус:", res.status)
 
-      setResult(result)
-      setPreviewUrl(preview)
+        if (res.status === 'done') {
+          setStep(3)
 
-      await new Promise((r) => setTimeout(r, 600))
-      navigate('/recommendations')
+          // Формуємо єдиний об'єкт для Store
+          const finalData = {
+            scan_id: res.scan_id,
+            style: res.detected_style,
+            palette: res.color_palette,
+            products: res.products || [],
+            detectedStyle: res.detected_style,
+            colorPalette: res.color_palette
+          }
+
+          console.log("Відправка в Store:", finalData)
+          setResult(finalData)
+          setPreviewUrl(preview)
+
+          return true // Сигнал успіху
+        }
+
+        if (res.status === 'error') {
+          throw new Error('Помилка при обробці зображення')
+        }
+
+        // Поступовий прогрес анімації
+        setStep((s) => Math.min(s + 1, 2))
+        return false
+      }
+
+      // 3. Інтервал перевірки
+      const pollInterval = setInterval(async () => {
+        try {
+          const isDone = await checkStatus()
+          if (isDone) {
+            clearInterval(pollInterval)
+            // Даємо 1 секунду на завершення анімації сканування перед переходом
+            setTimeout(() => {
+              navigate('/recommendations')
+            }, 1000)
+          }
+        } catch (err) {
+          clearInterval(pollInterval)
+          toast.error(err.message || 'Сталася помилка під час аналізу')
+          setScanning(false)
+        }
+      }, 3000)
+
     } catch (err) {
       toast.error(err.response?.data?.detail || 'Помилка аналізу. Спробуйте ще раз.')
       setScanning(false)
@@ -109,7 +150,7 @@ export default function UploadPage() {
               </button>
 
               <p className="font-body text-xs text-espresso-700/40 text-center">
-                Аналіз займає ~10-20 секунд
+                Аналіз зазвичай займає 10-20 секунд
               </p>
             </motion.div>
           ) : (

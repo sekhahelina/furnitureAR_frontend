@@ -1,4 +1,6 @@
-import client from './client'
+// src/api/analyzeApi.js
+
+import client from './client' // Переконайся, що цей імпорт розкоментований
 
 export const analyzeRoom = (file) => {
   const formData = new FormData()
@@ -8,5 +10,6 @@ export const analyzeRoom = (file) => {
   }).then((r) => r.data)
 }
 
-export const getScanStatus = (scanId) =>
+// Це твоя робоча функція, використовуй її:
+export const getStatus = (scanId) => 
   client.get(`/analyze/status/${scanId}`).then((r) => r.data)

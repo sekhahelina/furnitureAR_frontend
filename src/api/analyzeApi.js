@@ -1,6 +1,4 @@
-// src/api/analyzeApi.js
-
-import client from './client' // Переконайся, що цей імпорт розкоментований
+import client from './client'
 
 export const analyzeRoom = (file) => {
   const formData = new FormData()
@@ -10,6 +8,8 @@ export const analyzeRoom = (file) => {
   }).then((r) => r.data)
 }
 
-// Це твоя робоча функція, використовуй її:
-export const getStatus = (scanId) => 
-  client.get(`/analyze/status/${scanId}`).then((r) => r.data)
+export const getStatus = (scanId) => {
+  // Тут НЕ потрібно додавати headers вручну,
+  // бо interceptor у client.js зробить це за тебе!
+  return client.get(`/analyze/status/${scanId}`).then((r) => r.data)
+}

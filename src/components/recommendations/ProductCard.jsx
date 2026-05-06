@@ -32,24 +32,26 @@ const handleAR = () => {
       ? product.model_usdz_path
       : `${import.meta.env.VITE_API_URL}/models/${product.model_usdz_path}`
 
-    // iOS Quick Look ОБОВ'ЯЗКОВО потребує img всередині anchor
     const anchor = document.createElement('a')
     anchor.setAttribute('rel', 'ar')
     anchor.setAttribute('href', usdzUrl)
 
     const img = document.createElement('img')
-    img.setAttribute('src', product.image_url || 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7')
-    img.setAttribute('style', 'display:none')
+    img.src = product.image_url || ''
+    img.style.position = 'fixed'
+    img.style.top = '-9999px'  // поза екраном але НЕ display:none
+    img.style.width = '1px'
+    img.style.height = '1px'
     anchor.appendChild(img)
 
     document.body.appendChild(anchor)
-    anchor.click()
 
-    setTimeout(() => {
-      if (document.body.contains(anchor)) {
+    requestAnimationFrame(() => {
+      anchor.click()
+      setTimeout(() => {
         document.body.removeChild(anchor)
-      }
-    }, 1000)
+      }, 2000)
+    })
 
   } else {
     setShowAR(true)
